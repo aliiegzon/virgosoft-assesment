@@ -227,7 +227,11 @@ class OrderService extends BaseService
         return $trade;
     }
 
-    private function findCounterOrder(Order $order): Builder|Model|HigherOrderWhenProxy
+    /**
+     * @param  Order  $order
+     * @return Builder|Model|HigherOrderWhenProxy|null
+     */
+    private function findCounterOrder(Order $order): Builder|Model|HigherOrderWhenProxy|null
     {
         return $this->model->newQuery()
             ->where('symbol', $order->symbol)

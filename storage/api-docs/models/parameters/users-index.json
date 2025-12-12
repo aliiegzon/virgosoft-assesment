@@ -1,0 +1,22 @@
+{
+    "parameters": [
+        {
+            "name": "include=roles",
+            "in": "query",
+            "description": "Including the user's roles",
+            "required": false,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "include=roles.permissions",
+            "in": "query",
+            "description": "Including the user's roles and permissions",
+            "required": false,
+            "schema": {
+                "type": "string"
+            }
+        }
+    ]
+}

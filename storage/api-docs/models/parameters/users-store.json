@@ -1,0 +1,40 @@
+{
+    "parameters": [
+        {
+            "name": "first_name",
+            "in": "body",
+            "description": "First name of the user to store",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "last_name",
+            "in": "body",
+            "description": "Last name of the user to store",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "email",
+            "in": "body",
+            "description": "Email of the user to store",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "role",
+            "in": "body",
+            "description": "Role to assign to the user",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        }
+    ]
+}

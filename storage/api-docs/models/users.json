@@ -1,0 +1,57 @@
+{
+    "/api/users": {
+        "get": {
+            "tags": ["users"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for indexing users"
+                }
+            }
+        },
+        "post": {
+            "tags": ["users"],
+            "responses": {
+                "201": {
+                    "description": "An endpoint for creating a user"
+                }
+            }
+        }
+    },
+    "/api/users/{id}": {
+        "get": {
+            "tags": ["users"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for showing a specific user"
+                }
+            }
+        },
+        "put": {
+            "tags": ["users"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for updating a specific user"
+                }
+            }
+        },
+        "delete": {
+            "tags": ["users"],
+            "responses": {
+                "204": {
+                    "description": "An endpoint for deleting a specific user"
+                }
+            }
+        }
+    },
+    "/api/users/resend-invitation/{id}": {
+        "post": {
+            "tags": ["users"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for resending invitations",
+                    "do_not_generate_definition": ""
+                }
+            }
+        }
+    }
+}

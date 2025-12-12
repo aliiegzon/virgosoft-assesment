@@ -1,0 +1,444 @@
+{
+    "/api/login": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for logging in",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Success"
+                                            }
+                                        }
+                                    },
+                                    "data": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "first_name": {
+                                                    "type": "string"
+                                                },
+                                                "last_name": {
+                                                    "type": "string"
+                                                },
+                                                "full_name": {
+                                                    "type": "string"
+                                                },
+                                                "email": {
+                                                    "type": "string"
+                                                },
+                                                "is_active": {
+                                                    "type": "boolean"
+                                                },
+                                                "email_verified_at": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "auth": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token_type": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "string"
+                                                },
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "email",
+                    "in": "body",
+                    "description": "User's email address",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "password",
+                    "in": "body",
+                    "description": "User's password",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/login/refresh": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for refreshing tokens",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "New tokens generated!"
+                                            }
+                                        }
+                                    },
+                                    "auth": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "token_type": {
+                                                    "type": "string"
+                                                },
+                                                "expires_in": {
+                                                    "type": "string"
+                                                },
+                                                "access_token": {
+                                                    "type": "string"
+                                                },
+                                                "refresh_token": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "refresh_token",
+                    "in": "body",
+                    "description": "Refresh token",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/logout": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for logging out",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Successfully logged out!"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "/api/password/email": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for resending user's set password email",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "We have e-mailed your password reset link!"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "email",
+                    "in": "body",
+                    "description": "User's email address",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/password/reset": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for resetting user's password",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Password has been reset"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "email",
+                    "in": "body",
+                    "description": "User's email address",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "token",
+                    "in": "body",
+                    "description": "User's reset token",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "password",
+                    "in": "body",
+                    "description": "User's new password",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/password/set": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for setting the password",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Password set successfully."
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "email",
+                    "in": "body",
+                    "description": "User's email address",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "token",
+                    "in": "body",
+                    "description": "User's reset token",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "password",
+                    "in": "body",
+                    "description": "User's new password",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/password/validate-token": {
+        "post": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for validating set/reset token before showing the form",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "meta": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {
+                                                "type": "integer",
+                                                "example": 200
+                                            },
+                                            "message": {
+                                                "type": "string",
+                                                "example": "Token validated!"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "parameters": [
+                {
+                    "name": "email",
+                    "in": "body",
+                    "description": "User's email address",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "token",
+                    "in": "body",
+                    "description": "User's reset token",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "name": "password_broker",
+                    "in": "body",
+                    "description": "Password broker",
+                    "required": true,
+                    "schema": {
+                        "type": "string"
+                    }
+                }
+            ]
+        }
+    },
+    "/api/google/redirect": {
+        "get": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for redirecting to Google login"
+                }
+            }
+        }
+    },
+    "/api/google/callback": {
+        "get": {
+            "tags": ["authentications"],
+            "responses": {
+                "200": {
+                    "description": "An endpoint for getting the callback from Google"
+                }
+            }
+        }
+    }
+}

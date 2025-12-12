@@ -1,0 +1,58 @@
+{
+    "parameters": [
+        {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the user to update",
+            "required": true,
+            "schema": {
+                "type": "uuid"
+            }
+        },
+        {
+            "name": "first_name",
+            "in": "body",
+            "description": "First name of the user to update",
+            "required": false,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "last_name",
+            "in": "body",
+            "description": "Last name of the user to store",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "email",
+            "in": "body",
+            "description": "Email of the user to update",
+            "required": false,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "role",
+            "in": "body",
+            "description": "Role to sync to the user",
+            "required": true,
+            "schema": {
+                "type": "string"
+            }
+        },
+        {
+            "name": "is_active",
+            "in": "body",
+            "description": "Is active button to trigger",
+            "required": true,
+            "schema": {
+                "type": "bool"
+            }
+        }
+    ]
+}

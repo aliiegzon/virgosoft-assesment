@@ -8,11 +8,14 @@ use App\Models\Asset;
 use App\Models\Order;
 use App\Models\Trade;
 use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\HigherOrderWhenProxy;
 use Illuminate\Validation\ValidationException;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class OrderService extends BaseService
 {
@@ -30,6 +33,23 @@ class OrderService extends BaseService
     public function __construct(Order $model, private readonly Asset $asset, private readonly Trade $trade)
     {
         parent::__construct($model);
+    }
+
+    /**
+     * Display a listing of the resource.
+     */
+    public function index(): array|Collection|LengthAwarePaginator
+    {
+        $model = $this->model;
+
+        $query = QueryBuilder::for($model::class)
+            ->allowedFilters($model->allowedFilters())
+            ->allowedSorts($model->allowedSorts())
+            ->defaultSorts($model->defaultSorts())
+            ->allowedIncludes($model->allowedIncludes())
+            ->where('status', OrderStatus::OPEN);
+
+        return $query->paginate((int)request()->get('per_page') ?? $this->indexLimit);
     }
 
     /**

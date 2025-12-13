@@ -26,6 +26,7 @@ class ProfileService extends BaseService
         ]);
 
         return [
+            'id'          => $user->id,
             'balance_usd' => $user->balance,
             'assets'      => $user->assets->map(function ($asset) {
                 return [

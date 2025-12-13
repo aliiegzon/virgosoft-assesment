@@ -17,7 +17,7 @@ class UsersSeeder extends Seeder
             'last_name' => 'Admin',
             'role' => 'admin',
             'password' => '123#456!',
-            'balance'  => 1000000,
+            'balance'  => 10000000,
         ],
         [
             'email' => 'egzon@admin.com',
@@ -25,7 +25,7 @@ class UsersSeeder extends Seeder
             'last_name' => 'Admin',
             'role' => 'admin',
             'password' => '123#456!',
-            'balance'  => 1000000,
+            'balance'  => 10000000,
         ]
     ];
 

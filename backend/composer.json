@@ -6,6 +6,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "ext-bcmath": "*",
         "darkaonline/l5-swagger": "^8.5",
         "doctrine/dbal": "^3.8",
         "guzzlehttp/guzzle": "^7.2",
@@ -15,10 +16,10 @@
         "laravel/socialite": "^5.11",
         "laravel/telescope": "^4.17",
         "laravel/tinker": "^2.8",
+        "pusher/pusher-php-server": "^7.2",
         "spatie/laravel-permission": "^6.3",
         "spatie/laravel-query-builder": "^5.8",
-        "swagger-api/swagger-ui": "^5.11",
-        "ext-bcmath": "*"
+        "swagger-api/swagger-ui": "^5.11"
     },
     "require-dev": {
         "brianium/paratest": "^7.4",

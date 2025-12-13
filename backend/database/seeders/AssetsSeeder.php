@@ -22,6 +22,7 @@ class AssetsSeeder extends Seeder
             }
 
             $this->seedAsset($user, 'USDT', '10000', '0');
+            $this->seedAsset($user, 'ETH', '100', '0');
             $this->seedAsset($user, 'BTC', '1', '0');
         }
     }

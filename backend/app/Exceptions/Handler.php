@@ -50,7 +50,7 @@ class Handler extends ExceptionHandler
         return match (true) {
             $e instanceof UnprocessableEntityHttpException => $customResponse->exception($e),
             $e instanceof ModelNotFoundException => $customResponse->modelNotFoundException($e),
-            $e instanceof ValidationException => $customResponse->validationException($e),
+            $e instanceof ValidationException => parent::render($request, $e),
             $e instanceof AuthenticationException => $customResponse->unAuthenticated(),
             $e instanceof AuthorizationException, $e instanceof PermissionDoesNotExist => $customResponse->unAuthorized(),
             default => $this->renderExceptionResponse($request, $e)

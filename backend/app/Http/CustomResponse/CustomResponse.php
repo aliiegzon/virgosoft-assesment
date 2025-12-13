@@ -119,7 +119,7 @@ class CustomResponse extends Response
      */
     public function validationException(Throwable|Exception $exception): JsonResponse
     {
-        return $this->resolveResponseStructure(self::HTTP_BAD_REQUEST, $exception->getMessage());
+        return $this->resolveResponseStructure(self::HTTP_UNPROCESSABLE_ENTITY, $exception->getMessage());
     }
 
     /**

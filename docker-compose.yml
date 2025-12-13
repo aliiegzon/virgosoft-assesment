@@ -1,6 +1,6 @@
 services:
-    virgosoft-assesment:
-        container_name: virgosoft-assesment
+    virgosoft-assessment:
+        container_name: virgosoft-assessment
         build:
             context: .
             dockerfile: Dockerfile
@@ -10,7 +10,6 @@ services:
             - 'host.docker.internal:host-gateway'
         ports:
             - '${APP_PORT:-80}:80'
-            - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
@@ -24,6 +23,23 @@ services:
         depends_on:
             - pgsql
             - redis
+    frontend:
+        image: node:20
+        working_dir: /app
+        command: sh -c "npm install && npm run dev -- --host --port 5173"
+        volumes:
+            - './frontend:/app'
+        ports:
+            - '5173:5173'
+        environment:
+            VITE_API_BASE: '${VITE_API_BASE:-http://localhost/api}'
+            VITE_PUSHER_APP_KEY: '${PUSHER_APP_KEY}'
+            VITE_PUSHER_APP_CLUSTER: '${PUSHER_APP_CLUSTER:-mt1}'
+            VITE_PUSHER_HOST: '${PUSHER_HOST}'
+            VITE_PUSHER_PORT: '${PUSHER_PORT:-443}'
+            VITE_PUSHER_SCHEME: '${PUSHER_SCHEME:-https}'
+        networks:
+            - sail
     pgsql:
         image: 'postgres:15'
         ports:

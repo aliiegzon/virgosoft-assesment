@@ -25,7 +25,7 @@ docker compose up -d
 docker exec -it virgosoft-assessment bash
 composer install
 composer dumpautoload
-php artisan passport:keys --force
+php artisan passport:keys
 php artisan migrate --seed
 ```
 

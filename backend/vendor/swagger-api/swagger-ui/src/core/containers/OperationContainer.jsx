@@ -11,7 +11,7 @@ export default class OperationContainer extends PureComponent {
     const { tryItOutEnabled } = props.getConfigs()
 
     this.state = {
-      tryItOutEnabled: tryItOutEnabled === true || tryItOutEnabled === "true",
+      tryItOutEnabled,
       executeInProgress: false
     }
   }
@@ -61,14 +61,13 @@ export default class OperationContainer extends PureComponent {
     const showSummary = layoutSelectors.showSummary()
     const operationId = op.getIn(["operation", "__originalOperationId"]) || op.getIn(["operation", "operationId"]) || opId(op.get("operation"), props.path, props.method) || op.get("id")
     const isShownKey = ["operations", props.tag, operationId]
-    const isDeepLinkingEnabled = deepLinking && deepLinking !== "false"
     const allowTryItOut = supportedSubmitMethods.indexOf(props.method) >= 0 && (typeof props.allowTryItOut === "undefined" ?
       props.specSelectors.allowTryItOutFor(props.path, props.method) : props.allowTryItOut)
     const security = op.getIn(["operation", "security"]) || props.specSelectors.security()
 
     return {
       operationId,
-      isDeepLinkingEnabled,
+      isDeepLinkingEnabled: deepLinking,
       showSummary,
       displayOperationId,
       displayRequestDuration,
@@ -91,15 +90,15 @@ export default class OperationContainer extends PureComponent {
     }
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const { response, isShown } = nextProps
+  componentDidUpdate(prevProps) {
+    const { response, isShown } = this.props
     const resolvedSubtree = this.getResolvedSubtree()
-
-    if(response !== this.props.response) {
+  
+    if (response !== prevProps.response) {
       this.setState({ executeInProgress: false })
     }
-
-    if(isShown && resolvedSubtree === undefined) {
+  
+    if (isShown && resolvedSubtree === undefined && !prevProps.isShown) {
       this.requestResolvedSubtree()
     }
   }
@@ -124,7 +123,26 @@ export default class OperationContainer extends PureComponent {
 
   onResetClick = (pathMethod) => {
     const defaultRequestBodyValue = this.props.oas3Selectors.selectDefaultRequestBodyValue(...pathMethod)
-    this.props.oas3Actions.setRequestBodyValue({ value: defaultRequestBodyValue, pathMethod })
+    const contentType = this.props.oas3Selectors.requestContentType(...pathMethod)
+
+    if (contentType === "application/x-www-form-urlencoded" || contentType === "multipart/form-data") {
+      const jsonRequestBodyValue = JSON.parse(defaultRequestBodyValue)
+      Object.entries(jsonRequestBodyValue).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          jsonRequestBodyValue[key] = jsonRequestBodyValue[key].map((val) => {
+            if (typeof val === "object") {
+              return JSON.stringify(val, null, 2)
+            } 
+            return val
+          })
+        } else if (typeof value === "object") {
+          jsonRequestBodyValue[key] = JSON.stringify(jsonRequestBodyValue[key], null, 2)
+        }
+      })
+      this.props.oas3Actions.setRequestBodyValue({ value: fromJS(jsonRequestBodyValue), pathMethod })
+    } else {
+      this.props.oas3Actions.setRequestBodyValue({ value: defaultRequestBodyValue, pathMethod })
+    }
   }
 
   onExecute = () => {

@@ -29,6 +29,7 @@ use function is_string;
 use function mt_srand;
 use function ob_get_clean;
 use function ob_start;
+use function sprintf;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -85,11 +86,17 @@ final class SuiteLoader
                 $name = $test->name();
                 if ($test->providedData() !== []) {
                     $dataName = $test->dataName();
-                    if (is_int($dataName)) {
-                        $name .= '#' . $dataName;
+                    if ($this->options->functional) {
+                        $name = sprintf('/%s\s.*%s.*$/', $name, $dataName);
                     } else {
-                        $name .= '@' . $dataName;
+                        if (is_int($dataName)) {
+                            $name .= '#' . $dataName;
+                        } else {
+                            $name .= '@' . $dataName;
+                        }
                     }
+                } else {
+                    $name = sprintf('/%s$/', $name);
                 }
 
                 $tests[] = "$file\0$name";
@@ -142,7 +149,7 @@ final class SuiteLoader
             if ($test instanceof TestCase) {
                 $refClass = new ReflectionClass($test);
                 $filename = $refClass->getFileName();
-                assert(is_string($filename) && $filename !== '');
+                assert(is_string($filename));
                 $filename = $this->stripCwd($filename);
 
                 yield $filename => $test;

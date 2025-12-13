@@ -15,7 +15,7 @@ use OpenApi\Generator;
  */
 class OperationId implements ProcessorInterface
 {
-    protected $hash;
+    protected $hash = true;
 
     public function __construct(bool $hash = true)
     {
@@ -29,8 +29,6 @@ class OperationId implements ProcessorInterface
 
     /**
      *  If set to <code>true</code> generate ids (md5) instead of clear text operation ids.
-     *
-     * @param bool $hash
      */
     public function setHash(bool $hash): OperationId
     {

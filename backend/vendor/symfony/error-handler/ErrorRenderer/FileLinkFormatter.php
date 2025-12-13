@@ -30,7 +30,7 @@ class FileLinkFormatter
     private \Closure|string|null $urlFormat;
 
     /**
-     * @param string|\Closure $urlFormat the URL format, or a closure that returns it on-demand
+     * @param string|\Closure $urlFormat The URL format, or a closure that returns it on-demand
      */
     public function __construct(string|array|null $fileLinkFormat = null, ?RequestStack $requestStack = null, ?string $baseDir = null, string|\Closure|null $urlFormat = null)
     {
@@ -67,14 +67,11 @@ class FileLinkFormatter
         return false;
     }
 
-    /**
-     * @internal
-     */
-    public function __sleep(): array
+    public function __serialize(): array
     {
         $this->fileLinkFormat = $this->getFileLinkFormat();
 
-        return ['fileLinkFormat'];
+        return ['fileLinkFormat' => $this->fileLinkFormat];
     }
 
     /**

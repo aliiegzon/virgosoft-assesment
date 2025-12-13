@@ -3,9 +3,13 @@
  */
 import React from "react"
 import PropTypes from "prop-types"
+import { List } from "immutable"
 
 const Webhooks = ({ specSelectors, getComponent }) => {
   const operationDTOs = specSelectors.selectWebhooksOperations()
+  if (!operationDTOs) {
+    return null
+  }
   const pathItemNames = Object.keys(operationDTOs)
 
   const OperationContainer = getComponent("OperationContainer", true)
@@ -25,7 +29,7 @@ const Webhooks = ({ specSelectors, getComponent }) => {
               tag="webhooks"
               method={operationDTO.method}
               path={pathItemName}
-              specPath={operationDTO.specPath}
+              specPath={List(operationDTO.specPath)}
               allowTryItOut={false}
             />
           ))}

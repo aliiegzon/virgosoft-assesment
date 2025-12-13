@@ -87,7 +87,7 @@ class TopBar extends React.Component {
     if(urls && urls.length) {
       var targetIndex = this.state.selectedIndex
       let search = parseSearch()
-      let primaryName = search["urls.primaryName"] || configs["urls.primaryName"]
+      let primaryName = search["urls.primaryName"] || configs.urls.primaryName
       if(primaryName)
       {
         urls.forEach((spec, i) => {
@@ -113,6 +113,7 @@ class TopBar extends React.Component {
     const Button = getComponent("Button")
     const Link = getComponent("Link")
     const Logo = getComponent("Logo")
+    const DarkModeToggle = getComponent("DarkModeToggle")
 
     let isLoading = specSelectors.loadingStatus() === "loading"
     let isFailed = specSelectors.loadingStatus() === "failed"
@@ -141,7 +142,16 @@ class TopBar extends React.Component {
     }
     else {
       formOnSubmit = this.downloadUrl
-      control.push(<input className={classNames.join(" ")} type="text" onChange={ this.onUrlChange } value={this.state.url} disabled={isLoading} />)
+      control.push(
+        <input
+          className={classNames.join(" ")}
+          type="text"
+          onChange={this.onUrlChange}
+          value={this.state.url}
+          disabled={isLoading}
+          id="download-url-input"
+        />
+      )
       control.push(<Button className="download-url-button" onClick={ this.downloadUrl }>Explore</Button>)
     }
 
@@ -155,6 +165,7 @@ class TopBar extends React.Component {
             <form className="download-url-wrapper" onSubmit={formOnSubmit}>
               {control.map((el, i) => cloneElement(el, { key: i }))}
             </form>
+            <DarkModeToggle />
           </div>
         </div>
       </div>

@@ -14,6 +14,7 @@ const {
   WebpackBundleSizeAnalyzerPlugin,
 } = require("webpack-bundle-size-analyzer")
 const configBuilder = require("./_config-builder")
+const CopyWebpackPlugin = require("copy-webpack-plugin")
 
 // import path from "path"
 // import { StatsWriterPlugin } from "webpack-stats-plugin"
@@ -22,7 +23,7 @@ const result = configBuilder(
   {
     minimize: true,
     mangle: true,
-    sourcemaps: true,
+    sourcemaps: false,
     includeDependencies: true,
   },
   {
@@ -42,6 +43,18 @@ const result = configBuilder(
         emitErrors: false,
         // display full duplicates information? (Default: `false`)
         verbose: false,
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          {
+            from: require.resolve("../dev-helpers/oauth2-redirect.html"),
+            to: ".",
+          },
+          {
+            from: require.resolve("../dev-helpers/oauth2-redirect.js"),
+            to: ".",
+          },
+        ],
       }),
       new WebpackBundleSizeAnalyzerPlugin("log.bundle-sizes.swagger-ui.txt"),
       // new StatsWriterPlugin({

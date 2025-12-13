@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Events\OrderMatched;
+use App\Events\OrderPlaced;
+use App\Events\OrderCancelled;
 use App\Enums\OrderStatus;
+use App\Enums\OrderSymbol;
 use App\Models\Asset;
 use App\Models\Order;
 use App\Models\Trade;
@@ -47,9 +50,9 @@ class OrderService extends BaseService
             ->allowedSorts($model->allowedSorts())
             ->defaultSorts($model->defaultSorts())
             ->allowedIncludes($model->allowedIncludes())
-            ->where('status', OrderStatus::OPEN);
+            ->where('user_id', auth()->id());
 
-        return $query->paginate((int)request()->get('per_page') ?? $this->indexLimit);
+        return $query->paginate((int) request()->get('per_page') ?: $this->indexLimit);
     }
 
     /**
@@ -60,6 +63,7 @@ class OrderService extends BaseService
     public function placeOrder(User $user, array $data): array
     {
         $data['symbol'] = strtoupper((string) $data['symbol']);
+        $data['price'] = OrderSymbol::from($data['symbol'])->price();
 
         $trade = null;
 
@@ -69,6 +73,11 @@ class OrderService extends BaseService
 
             return $order->fresh();
         });
+
+        // If no trade occurred, broadcast placement to user + orderbook
+        if (!$trade) {
+            $this->broadcastOrderPlaced($user->fresh(), $order->fresh());
+        }
 
         return [$order, $trade];
     }
@@ -85,14 +94,19 @@ class OrderService extends BaseService
         $this->ensureOpen($order);
 
         DB::transaction(function () use ($user, $order) {
-            $order = $this->lockOrder($order->id);
+            $lockedOrder = $this->lockOrder($order->id);
 
-            $this->refundReservation($user, $order);
+            $this->refundReservation($user, $lockedOrder);
 
-            $order->status = OrderStatus::CANCELLED;
-            $order->locked_value = '0';
-            $order->save();
+            $lockedOrder->status = OrderStatus::CANCELLED;
+            $lockedOrder->locked_value = '0';
+            $lockedOrder->save();
         });
+
+        $order->refresh();
+        $user->refresh();
+
+        $this->broadcastOrderCancelled($user, $order);
 
         return $order->fresh();
     }
@@ -231,20 +245,7 @@ class OrderService extends BaseService
 
         [$buy, $sell] = $order->side === self::BUY ? [$order, $counter] : [$counter, $order];
 
-        $trade = $this->settle($buy, $sell);
-
-        OrderMatched::dispatch([
-            'trade_id'    => $trade->id,
-            'symbol'      => $trade->symbol,
-            'price'       => $trade->price,
-            'amount'      => $trade->amount,
-            'volume_usd'  => $trade->volume_usd,
-            'fee_usd'     => $trade->fee_usd,
-            'buyer_id'    => $buy->user_id,
-            'seller_id'   => $sell->user_id,
-        ]);
-
-        return $trade;
+        return $this->settle($buy, $sell);
     }
 
     /**
@@ -276,8 +277,8 @@ class OrderService extends BaseService
      */
     private function settle(Order $buy, Order $sell): Builder|Model
     {
-        // Trade at buyer price only with exact amount match.
-        $price  = (string) $buy->price;
+        // Trade at seller (maker) price with exact amount match
+        $price  = (string) $sell->price;
         $amount = (string) $buy->amount;
 
         $volume = $this->multiply($amount, $price);
@@ -301,13 +302,26 @@ class OrderService extends BaseService
         $sellerAsset->locked_amount = $this->subtract($sellerAsset->locked_amount, $amount);
         $sellerAsset->save();
 
+        // Refund buyer any over lock when trade executes below their limit
+        $requiredTotal = $this->add($volume, $fee);
+        $lockedTotal   = (string) $buy->locked_value;
+        if ($this->lessThan($requiredTotal, $lockedTotal)) {
+            $refund = $this->subtract($lockedTotal, $requiredTotal);
+            $buyer->balance = $this->add($buyer->balance, $refund);
+            $buyer->save();
+        }
+
         $seller->balance = $this->add($seller->balance, $volume);
         $seller->save();
 
         $this->markFilled($buy);
         $this->markFilled($sell);
+        $buy->locked_value = '0';
+        $sell->locked_value = '0';
+        $buy->save();
+        $sell->save();
 
-        return $this->trade->newQuery()->create([
+        $trade = $this->trade->newQuery()->create([
             'symbol'        => $buy->symbol,
             'buy_order_id'  => $buy->id,
             'sell_order_id' => $sell->id,
@@ -316,6 +330,70 @@ class OrderService extends BaseService
             'volume_usd'    => $volume,
             'fee_usd'       => $fee,
         ]);
+
+        $buy->refresh();
+        $sell->refresh();
+        $buyerAsset->refresh();
+        $sellerAsset->refresh();
+        $buyer->refresh();
+        $seller->refresh();
+
+        OrderMatched::dispatch([
+            'trade' => [
+                'id' => $trade->id,
+                'symbol' => $trade->symbol,
+                'price' => $trade->price,
+                'amount' => $trade->amount,
+                'volume_usd' => $trade->volume_usd,
+                'fee_usd' => $trade->fee_usd,
+            ],
+            'buy_order' => [
+                'id' => $buy->id,
+                'user_id' => $buy->user_id,
+                'symbol' => $buy->symbol,
+                'side' => $buy->side,
+                'price' => $buy->price,
+                'amount' => $buy->amount,
+                'status' => [
+                    'value' => OrderStatus::FILLED->value,
+                    'label' => OrderStatus::FILLED->name,
+                ],
+                'locked_value' => $buy->locked_value,
+            ],
+            'sell_order' => [
+                'id' => $sell->id,
+                'user_id' => $sell->user_id,
+                'symbol' => $sell->symbol,
+                'side' => $sell->side,
+                'price' => $sell->price,
+                'amount' => $sell->amount,
+                'status' => [
+                    'value' => OrderStatus::FILLED->value,
+                    'label' => OrderStatus::FILLED->name,
+                ],
+                'locked_value' => $sell->locked_value,
+            ],
+            'buyer' => [
+                'id' => $buyer->id,
+                'balance' => $buyer->balance,
+                'asset' => [
+                    'symbol' => $buyerAsset->symbol,
+                    'amount' => $buyerAsset->amount,
+                    'locked_amount' => $buyerAsset->locked_amount,
+                ],
+            ],
+            'seller' => [
+                'id' => $seller->id,
+                'balance' => $seller->balance,
+                'asset' => [
+                    'symbol' => $sellerAsset->symbol,
+                    'amount' => $sellerAsset->amount,
+                    'locked_amount' => $sellerAsset->locked_amount,
+                ],
+            ],
+        ]);
+
+        return $trade;
     }
 
     /**
@@ -370,6 +448,84 @@ class OrderService extends BaseService
         $asset->amount = $this->add($asset->amount, $amount);
         $asset->locked_amount = $this->subtract($asset->locked_amount, $amount);
         $asset->save();
+    }
+
+    /**
+     * Broadcast newly placed (unmatched) order to user + orderbook.
+     */
+    private function broadcastOrderPlaced(User $user, Order $order): void
+    {
+        $asset = $this->asset->newQuery()
+            ->where('user_id', $user->id)
+            ->where('symbol', $order->symbol)
+            ->first();
+
+        $payload = [
+            'order' => [
+                'id'           => $order->id,
+                'user_id'      => $order->user_id,
+                'symbol'       => $order->symbol,
+                'side'         => $order->side,
+                'price'        => $order->price,
+                'amount'       => $order->amount,
+                'status'       => [
+                    'value' => $order->status->value,
+                    'label' => $order->status->name,
+                ],
+                'locked_value' => $order->locked_value,
+                'created_at'   => $order->created_at?->toIso8601String(),
+            ],
+            'user' => [
+                'id'      => $user->id,
+                'balance' => $user->balance,
+                'asset'   => $asset ? [
+                    'symbol'        => $asset->symbol,
+                    'amount'        => $asset->amount,
+                    'locked_amount' => $asset->locked_amount,
+                ] : null,
+            ],
+        ];
+
+        OrderPlaced::dispatch($payload);
+    }
+
+    /**
+     * Broadcast cancellation to user + orderbook.
+     */
+    private function broadcastOrderCancelled(User $user, Order $order): void
+    {
+        $asset = $this->asset->newQuery()
+            ->where('user_id', $user->id)
+            ->where('symbol', $order->symbol)
+            ->first();
+
+        $payload = [
+            'order' => [
+                'id'           => $order->id,
+                'user_id'      => $order->user_id,
+                'symbol'       => $order->symbol,
+                'side'         => $order->side,
+                'price'        => $order->price,
+                'amount'       => $order->amount,
+                'status'       => [
+                    'value' => OrderStatus::CANCELLED->value,
+                    'label' => OrderStatus::CANCELLED->name,
+                ],
+                'locked_value' => $order->locked_value,
+                'updated_at'   => $order->updated_at?->toIso8601String(),
+            ],
+            'user' => [
+                'id'      => $user->id,
+                'balance' => $user->balance,
+                'asset'   => $asset ? [
+                    'symbol'        => $asset->symbol,
+                    'amount'        => $asset->amount,
+                    'locked_amount' => $asset->locked_amount,
+                ] : null,
+            ],
+        ];
+
+        OrderCancelled::dispatch($payload);
     }
 
     /**

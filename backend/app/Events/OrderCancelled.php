@@ -9,7 +9,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderMatched implements ShouldBroadcastNow
+class OrderCancelled implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -21,21 +21,18 @@ class OrderMatched implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
-        $buyerChannel = $this->payload['buyer']['id'] ?? null;
-        $sellerChannel = $this->payload['seller']['id'] ?? null;
-        $symbol = $this->payload['trade']['symbol'] ?? null;
+        $userId = $this->payload['user']['id'] ?? null;
+        $symbol = $this->payload['order']['symbol'] ?? null;
 
         return array_filter([
-            $buyerChannel ? new PrivateChannel('user.' . $buyerChannel) : null,
-            $sellerChannel ? new PrivateChannel('user.' . $sellerChannel) : null,
+            $userId ? new PrivateChannel('user.' . $userId) : null,
             $symbol ? new Channel('orderbook.' . $symbol) : null,
-            $symbol ? new Channel('trades.' . $symbol) : null,
         ]);
     }
 
     public function broadcastAs(): string
     {
-        return 'OrderMatched';
+        return 'OrderCancelled';
     }
 
     public function broadcastWith(): array

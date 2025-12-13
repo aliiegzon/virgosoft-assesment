@@ -13,11 +13,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare backend env
+        run: |
+          cp backend/.env.example backend/.env
+          if [ -n "${{ secrets.APP_KEY }}" ]; then
+            echo "APP_KEY=${{ secrets.APP_KEY }}" >> backend/.env
+          fi
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       - name: Build and start stack
         run: docker compose up --build -d
+
+      - name: Generate app key (if missing)
+        run: docker exec virgosoft-assessment php artisan key:generate --force
+
+      - name: Run migrations and seed
+        run: docker exec virgosoft-assessment php artisan migrate --seed
 
       - name: Run backend tests
         run: docker exec virgosoft-assessment php artisan test

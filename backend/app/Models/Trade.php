@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\QueryBuilder\AllowedFilter;
 
 class Trade extends BaseModel
 {
@@ -45,9 +46,9 @@ class Trade extends BaseModel
     public function allowedFilters(): array
     {
         return [
-            'symbol',
-            'buy_order_id',
-            'sell_order_id',
+            AllowedFilter::exact('symbol'),
+            AllowedFilter::exact('buy_order_id'),
+            AllowedFilter::exact('sell_order_id'),
         ];
     }
 

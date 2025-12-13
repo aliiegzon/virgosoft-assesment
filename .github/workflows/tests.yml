@@ -20,7 +20,7 @@ jobs:
         run: docker compose up --build -d
 
       - name: Run backend tests
-        run: docker exec virgosoft-assesment php artisan test
+        run: docker exec virgosoft-assessment php artisan test
 
       - name: Show container logs on failure
         if: failure()
